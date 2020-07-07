@@ -12,6 +12,13 @@ Drilling.Start = function(callback)
   end
 end
 
+Drilling.Stop = function()
+  if Drilling.Active then
+    Drilling.Active = false
+	Drilling.Result = 3
+  end
+end
+
 Drilling.Init = function()
   if Drilling.Scaleform then
     Scaleforms.UnloadMovie(Drilling.Scaleform)
@@ -19,13 +26,11 @@ Drilling.Init = function()
 
   Drilling.Scaleform = Scaleforms.LoadMovie("DRILLING")
 
-  
   Drilling.DrillSpeed = 0.0
   Drilling.DrillPos   = 0.0
   Drilling.DrillTemp  = 0.0
   Drilling.HoleDepth  = 0.0
   
-
   Scaleforms.PopFloat(Drilling.Scaleform,"SET_SPEED",           0.0)
   Scaleforms.PopFloat(Drilling.Scaleform,"SET_DRILL_POSITION",  0.0)
   Scaleforms.PopFloat(Drilling.Scaleform,"SET_TEMPERATURE",     0.0)
@@ -33,10 +38,12 @@ Drilling.Init = function()
 end
 
 Drilling.Update = function(callback)
+  form = setupScaleform("instructional_buttons")
   while Drilling.Active do
     Drilling.Draw()
     Drilling.DisableControls()
     Drilling.HandleControls()
+    DrawScaleformMovieFullscreen(form, 255, 255, 255, 255, 0)
     Wait(0)
   end
   callback(Drilling.Result)
@@ -101,10 +108,10 @@ Drilling.HandleControls = function()
   end
 
   if Drilling.DrillTemp >= 1.0 then
-    Drilling.Result = false
+	Drilling.Result = 2
     Drilling.Active = false
   elseif Drilling.DrillPos >= 1.0 then
-    Drilling.Result = true
+    Drilling.Result = 1
     Drilling.Active = false
   end
 
@@ -123,4 +130,72 @@ Drilling.EnableControls = function()
   end
 end
 
+function ButtonMessage(text)
+    BeginTextCommandScaleformString("STRING")
+    AddTextComponentScaleform(text)
+    EndTextCommandScaleformString()
+end
+
+function Button(ControlButton)
+    N_0xe83a3e3557a56640(ControlButton)
+end
+
+function setupScaleform(scaleform)
+    local scaleform = RequestScaleformMovie(scaleform)
+    while not HasScaleformMovieLoaded(scaleform) do
+        Citizen.Wait(0)
+    end
+    PushScaleformMovieFunction(scaleform, "CLEAR_ALL")
+    PopScaleformMovieFunctionVoid()
+    
+    PushScaleformMovieFunction(scaleform, "SET_CLEAR_SPACE")
+    PushScaleformMovieFunctionParameterInt(200)
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "SET_DATA_SLOT")
+    PushScaleformMovieFunctionParameterInt(0)
+    Button(GetControlInstructionalButton(2, 172, true))
+    ButtonMessage("Drill Forward")
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "SET_DATA_SLOT")
+    PushScaleformMovieFunctionParameterInt(1)
+    Button(GetControlInstructionalButton(2, 173, true))
+    ButtonMessage("Drill Backward")
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "SET_DATA_SLOT")
+    PushScaleformMovieFunctionParameterInt(2)
+    Button(GetControlInstructionalButton(2, 175, true))
+    ButtonMessage("Drill Faster")
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "SET_DATA_SLOT")
+    PushScaleformMovieFunctionParameterInt(3)
+    Button(GetControlInstructionalButton(2, 174, true))
+    ButtonMessage("Drill Slower")
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "SET_DATA_SLOT")
+    PushScaleformMovieFunctionParameterInt(4)
+    Button(GetControlInstructionalButton(2, 178, true)) -- The button to display
+    ButtonMessage("Stop Drilling") -- the message to display next to it
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "DRAW_INSTRUCTIONAL_BUTTONS")
+    PopScaleformMovieFunctionVoid()
+
+    PushScaleformMovieFunction(scaleform, "SET_BACKGROUND_COLOUR")
+    PushScaleformMovieFunctionParameterInt(0)
+    PushScaleformMovieFunctionParameterInt(0)
+    PushScaleformMovieFunctionParameterInt(0)
+    PushScaleformMovieFunctionParameterInt(80)
+    PopScaleformMovieFunctionVoid()
+
+    return scaleform
+end
+
 AddEventHandler("Drilling:Start",Drilling.Start)
+AddEventHandler("Drilling:Stop",Drilling.Stop)
+
+
